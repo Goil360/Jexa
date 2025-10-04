@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My First JavaScript Chatbot</title>
+    <style>
+        /* --- CSS FOR THE LOOK AND FEEL --- */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #chat-container {
+            width: 400px;
+            height: 600px;
+            background-color: #fff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #chat-box {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 15px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+
+        /* --- YOUR CUSTOM COLORS ARE HERE! --- */
+        .user-message {
+            background-color: #FFC0CB; /* Light Pink */
+            color: #333; /* Dark text for readability */
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+
+        .bot-message {
+            background-color: #DDA0DD; /* Soft Purple */
+            color: #333;
+            margin-right: auto;
+            border-bottom-left-radius: 2px;
+        }
+
+        #input-area {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        #user-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            margin-right: 5px;
+        }
+
+        #send-button {
+            background-color: #28a745; /* Green */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #send-button:hover {
+            background-color: #218838;
+        }
+
+        /* Styles for the "Quick Note" feature */
+        #note-area {
+            padding: 10px;
+            background-color: #fff3cd; /* Light Yellow */
+            border-bottom: 1px solid #ffeeba;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #quick-note {
+            padding: 8px;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="chat-container">
+        <div id="note-area">
+            <label for="quick-note" style="font-size: 0.9em;">Quick Memory Note:</label>
+            <input type="text" id="quick-note" placeholder="Type a reminder here to jog your memory later...">
+        </div>
+
+        <div id="chat-box">
+            <div class="message bot-message">Hello! I'm your custom simple bot. Try asking me to **"tell me a joke"**, **"tell me a story"** or a **"fun fact"**!</div>
+        </div>
+
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+            <button id="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // --- JAVASCRIPT FOR THE CHATBOT LOGIC ---
+
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const quickNote = document.getElementById('quick-note');
+
+        // --- ARRAYS FOR RANDOM RESPONSES ---
+        const jokes = [
+            "Why don't scientists trust atoms? Because they make up everything!",
+            "What do you call a fish with no eyes? Fsh!",
+            "I told my wife she was drawing her eyebrows too high. She looked surprised.",
+            "I'm reading a book on anti-gravity. It's impossible to put down!",
+            "Did you hear about the two guys who stole a calendar? They each got six months.",
+            "Why did the scarecrow win an award? Because he was outstanding in his field!",
+            "What do you call a lazy kangaroo? Pouch potato.",
+            "I used to hate facial hair... but then it grew on me.",
+            "What do you call an alligator in a vest? An investigator!",
+        ];
+
+        const stories = [
+            "Once upon a time, in a land made entirely of rubber, a little ball bounced so high it saw the moon and waved.",
+            "The ancient clock in the tower stopped at 3:15 PM every day, but only the baker knew why: that's when the best cookies came out of the oven.",
+            "A tiny robot decided to learn how to juggle clouds. It took a lot of programming, but eventually, the sky was a beautiful, fluffy show.",
+            "In the deepest library, a book about silence escaped one night to learn the sound of laughter. It took a while, but it found its best story.",
+            "The streetlights in the city secretly hold contests for who can shine the brightest. The winner gets to tell the sun a secret when it rises.",
+            "A cloud that always looked like a bicycle tire rolled down the side of a mountain, inspiring a small child to invent the world's first air-powered car.",
+        ];
+
+
+        // Function to handle the Enter key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Function to display a message in the chat box
+        function displayMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(sender + '-message');
+            messageDiv.innerHTML = text; // Use innerHTML for simple formatting like **bold**
+            chatBox.appendChild(messageDiv);
+
+            // Scroll to the bottom of the chat box
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // The core logic of the chatbot
+        function getBotResponse(userText) {
+            // Clean up the user's input for easier matching
+            const text = userText.toLowerCase().trim();
+
+            // 1. Memory Reminder Feature
+            if (text.includes("what was i going to say") || text.includes("remind me")) {
+                const note = quickNote.value.trim();
+                if (note) {
+                    return `Your note says: **"${note}"**. Does that help jog your memory?`;
+                } else {
+                    return "You don't have a reminder saved in the Quick Memory Note. Try typing it there before you forget!";
+                }
+            }
+            
+            // 2. Joke Feature
+            else if (text.includes("tell me a joke") || text.includes("joke")) {
+                const randomIndex = Math.floor(Math.random() * jokes.length);
+                return jokes[randomIndex];
+            }
+
+            // 3. Simple Story Feature (uses pre-written stories)
+            else if (text.includes("tell me a story") || text.includes("first class story")) {
+                const randomIndex = Math.floor(Math.random() * stories.length);
+                return stories[randomIndex];
+            }
+
+            // 4. Random Fun Fact Picker
+            else if (text.includes("tell me a fact") || text.includes("fun fact")) {
+                const funFacts = [
+                    "A 'jiffy' is an actual unit of time: 1/100th of a second!",
+                    "The shortest war in history was between Britain and Zanzibar on August 27, 1896. Zanzibar surrendered after 38 to 45 minutes.",
+                    "Honey never spoils. Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly edible!",
+                    "There are more stars than grains of sand on Earth. Think about that next time you look up!",
+                    "The total weight of all the ants on Earth is estimated to be about the same as the total weight of all the humans on Earth!",
+                    "A single cloud can weigh more than a million pounds.",
+                    "The inventor of the Pringles can, Fredric Baur, requested to be buried in one. His children honored his request.",
+                ];
+                const randomIndex = Math.floor(Math.random() * funFacts.length);
+                return funFacts[randomIndex];
+            }
+
+            // 5. Simple Question/Answer
+            else if (text.includes("what is your name")) {
+                return "I am a simple JavaScript Chatbot built by you! I don't have a proper name yet.";
+            }
+
+            else if (text.includes("hello") || text.includes("hi")) {
+                return "Hello there! How can I assist you?";
+            }
+
+            // 6. Time and Date (simple approximation)
+            else if (text.includes("what time is it") || text.includes("what is the date")) {
+                const now = new Date();
+                return `The current time is approximately ${now.toLocaleTimeString()} on ${now.toLocaleDateString()}.`;
+            }
+
+            // 7. Default/Fallback Response
+            else {
+                return "Hmm, I'm a simple bot and don't quite understand that. Try asking me for a **'joke'**, a **'story'**, or a **'fun fact'**!";
+            }
+        }
+
+        // Function called when the user sends a message
+        function sendMessage() {
+            const userText = userInput.value.trim();
+
+            if (userText === '') {
+                return; // Do nothing if the input is empty
+            }
+
+            // 1. Display the user's message
+            displayMessage(userText, 'user');
+
+            // 2. Clear the input field
+            userInput.value = '';
+
+            // 3. Get the bot's response after a slight delay (makes it feel more natural)
+            setTimeout(() => {
+                const botResponse = getBotResponse(userText);
+                displayMessage(botResponse, 'bot');
+            }, 500); // 0.5 second delay
+        }
+    </script>
+</body>
+</html>
